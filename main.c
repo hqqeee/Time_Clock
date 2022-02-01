@@ -7,10 +7,16 @@
 
 
 #include "config.h"
+#include "irq_handlers.h"
+#include "dyn_display.h"
+
 int main(void)
 {
-	rcc_config();	
+	rcc_config();
+	gpio_config();
+	timer6_config();
 	while(1)
 	{
+		display_number(disp_number);
 	}
 }
