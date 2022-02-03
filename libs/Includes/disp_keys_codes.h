@@ -1,6 +1,6 @@
 /*
- * This file contains definitions of Display Codes.
- * Connections:
+ * This file contains definitions of Display and Keyboard Codes.
+ * Display Connections:
  * Board Pins | Display Pins
  * PB0 		  | A
  * PB1 		  | B
@@ -23,10 +23,34 @@
  * PB4   PB2
  * PB4   PB2
  *    PB3
+ *
+ * Keyboard Connections:
+ * Board Pins | Keyboard Pins
+ * PC0        | Col 1
+ * PC1        | Col 2
+ * PC3        | Col 3
+ * PA5        | Row 1
+ * PA3        | Row 2
+ * PA2        | Row 3
+ * PA1        | Row 4
+ *
+ * Col1 Col2 Col3
+ *  PC0 PC1 PC2 
+ * |---|---|---|
+ * | 1 | 2 | 3 | PA5 - Row1
+ * |---|---|---|
+ * | 4 | 5 | 6 | PA3 - Row2
+ * |---|---|---|
+ * | 7 | 8 | 9 | PA2 - Row3
+ * |---|---|---|
+ * | * | 0 | # | PA1 - Row4
+ * |---|---|---|
  */
 
-#ifndef __DISPLAY_CODES_H
-#define __DISPLAY_CODES_H
+#ifndef __DISP_KEYS_CODES_H
+#define __DISP_KEYS_CODES_H
+
+/* Display */
 
 #define DISP_0 0x3FU
 #define DISP_1 0x06U
@@ -50,4 +74,11 @@
 #define DIG5_MSK 0xF780U
 #define DIG6_MSK 0xEF80U
 
-#endif /* __DISPLAY_CODES_H */
+/* Keyboard */
+
+#define CHECK_COL1 READ_BIT(GPIOC->ODR,0x7U) == 0x6U
+#define CHECK_COL2 READ_BIT(GPIOC->ODR,0x7U) == 0x5U
+#define CHECK_COL3 READ_BIT(GPIOC->ODR,0x7U) == 0x3U
+
+
+#endif /* __DISP_KEYS_CODES_H */

@@ -44,7 +44,7 @@
 #define READ_BIT(REG,BIT)		 		 ((REG) & (BIT))
 #define CLEAR_REG(REG)					 ((REG) &= 0x0)
 #define WRITE_REG(REG,VAL)  			 ((REG) = (VAL))
-#define MODIFY_REG(REG,CMASK,SMASK) 	 ((REG) = ((CLEAR_REG((REG),(CMASK))) | (MASK)))
-#define REV_MODIFY_REG(REG,CMASK,SMASK)  ((REG) = ((SET_BIT((REG),(SMASK))) & (~(MASK))) 
+#define MODIFY_REG(REG,CMASK,SMASK) 	 ((REG) = ((CLEAR_REG((REG),(CMASK))) | (SMASK))
+#define REV_MODIFY_REG(REG,CMASK,SMASK)  ((REG) = ((SET_BIT((REG),(CMASK))) & (~(SMASK)))) 
 
 #endif /*__BIT_OPERATIONS_H */

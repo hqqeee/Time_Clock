@@ -24,11 +24,23 @@
  *	 - gpio_config(): Configure GPIO as follow:
  *	 			> GPIOA pin 0: Input
  *	 			> GPIOB pin 0-12: Output
- *	 			> GPIOC pin 8-0: Output
+ *	 			> GPIOC pin 8-9: Output
+ *	 			> GPIOA pin 1,2,3,5: AF mode
+ *	 			> GPIOA pin 1,2,3,5: Pull up
+ *	 			> GPIOA pin 1,2,3,5: AF2
+ *	 			> GPIOC pin 0,1,2: GP Output mode
  *	 - timer6_config(): Configure TIM6.
  *	 			> Prescaler: 47999
  *	 			> Autoreload: 999
  *	 			Update event every 1 second.
+ *	 - timer2_config(): Configure TIM2.
+ *	 			> Prescaler: 47999
+ *	 			> F count: 1 000 Hz
+ *	 			> CC1-4 directly mapped to TI1-4
+ *	 			> CC1-4 mode: IC(Input Capture)
+ *	 			> CC1-4 filter: no input filter
+ *	 			> IC1-4 prescaler: no prescaler
+ *	 			> IC1-4 trigger mode: Falling edge
  */
 
 #include "main.h"
@@ -126,6 +138,22 @@ void gpio_config(void)
 	CLEAR_BIT(GPIOA->MODER, GPIO_MODER_MODER0);
 	SET_BIT(GPIOB->MODER, 0x1555555);
 	SET_BIT(GPIOC->MODER, 0x00050000);
+	/*
+	 * Keyboard GPIO config 
+	 * GPIOA 1,2,3,5 - Alternate function Mode
+	 * GPIOA 1 - AF2(TIM2_CH2)
+	 * GPIOA 2 - AF2(TIM2_CH3)
+	 * GPIOA 3 - AF2(TIM2_CH4)
+	 * GPIOA 5 - AF2(TIM2_CH1_ETR)
+	 * GPIOA 1,2,3,5 - Pull-up
+	 * GPIOC 0,1,2   - GP Output mode
+	 */
+	SET_BIT(GPIOA->MODER, 0x8A8U); //1000 1010 1000
+	SET_BIT(GPIOA->AFR[0], 0x202220); // 0010 0000 0010 00010 00010 0000
+	SET_BIT(GPIOA->PUPDR, 0x454U); // 0100 0101 0100					  
+	SET_BIT(GPIOC->MODER, 0x15U);  //0001 0100
+	/* Default ODR */				
+	SET_BIT(GPIOC->ODR, 0x3U);						
 }
 
 void timer6_config(void)
@@ -133,7 +161,7 @@ void timer6_config(void)
 	/* Clock on TIM6 */
 	SET_BIT(RCC->APB1ENR, (0x1U<<4));
 	/* Set TIM6 prescaler value 
-	 * Counter clock frequency: 1kHz(if PSC = 47999)*/
+	 * Counter clock frequency: 1kHz(if PSC = 47999, ARR = 999)*/
 	WRITE_REG(TIM6 -> PSC, 47999);
 	/*Enable auto reload preload */
 	SET_BIT(TIM6->CR1, (0x1U<<7));
@@ -145,8 +173,40 @@ void timer6_config(void)
 	SET_BIT(TIM6 ->DIER, 0x1U);
 	/* NVIC config */
 	NVIC_EnableIRQ(TIM6_DAC_IRQn);
-	NVIC_SetPriority(TIM6_DAC_IRQn, 0);
+	NVIC_SetPriority(TIM6_DAC_IRQn, 1);
 
 	/* Update generation */
 	SET_BIT(TIM6->EGR, 0x1);
+}
+
+void timer2_config(void)
+{
+	/* Clock on TIM2 */
+	SET_BIT(RCC->APB1ENR, 0x1);
+	/* TIM2 Prescaler PSC = 47999
+	 * Auto-reload: 9
+	 * Counter clock f = 1kHz */
+	WRITE_REG(TIM2->PSC, 47999);
+	/* Capture/compare mode register 1 & 2 setup.
+	 * Mode: Input capture(IC)
+	 * IC1 mapped on TI1(СС1S = 01)
+	 * IC2 mapped on TI2(CC2s = 01)
+	 * IC3 mapped on TI3(СС3S = 01)
+	 * IC4 mapped on TI4(CC4s = 01)
+	 * IC(1-4) filter: no input filter
+	 * IC(1-4) Prescaler: no prescaler(IC1PSC && IC2PSC = 00) */
+	WRITE_REG(TIM2->CCMR1, 0x0101U); // 0000 0001 0000 0001
+	WRITE_REG(TIM2->CCMR2, 0x0101U); // 0000 0001 000 0001
+	/* CC1, CC2, CC3, CC4 capture enable(CCxE = 1),
+	 * falling edge trigger(CCxP = 1, CCxNP = 0) */
+	SET_BIT(TIM2 -> CCER, 0x3333U); // 0011 0011 0011 0011
+	/* Enable CC1-4 interrupts */
+	SET_BIT(TIM2 -> DIER, 0x1EU); // 0001 1110
+	/* Enable TIM2 counter */
+	SET_BIT(TIM2 -> CR1, 0x1U);
+	/* NVIC config */
+	NVIC_EnableIRQ(TIM2_IRQn);
+	NVIC_SetPriority(TIM2_IRQn, 0);
+	/* Update generation */
+	SET_BIT(TIM2 -> EGR, 0x1);
 }
